@@ -1,0 +1,21 @@
+# depslib dependency file v1.0
+1705355691 source:c:\users\sara\desktop\goblino\main.c
+	"main.h"
+
+1689176759 c:\codeblocks\pdcurses\curses.h
+	<stdarg.h>
+	<stddef.h>
+	<stdio.h>
+	<wchar.h>
+	<stdbool.h>
+
+1705355674 c:\users\sara\desktop\goblino\main.h
+	<curses.h>
+	<stdlib.h>
+	<stdbool.h>
+	<stdint.h>
+	<string.h>
+	<time.h>
+
+1702920116 c:\users\sara\desktop\goblino\map_util.c
+
