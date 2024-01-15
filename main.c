@@ -33,7 +33,7 @@ void get_layers(map_t * parent_ptr)
 
 layer_t * create_layer(layer_id_t id, map_t * parent_ptr)
 {
-    layer_t * layer;
+    layer_t * layer = (layer_t *) calloc(1, sizeof(layer_t));
 
     layer->id = id;
 
@@ -275,7 +275,7 @@ int main( void )
     init_tile_colors();
     map_t * the_map = create_map(stdscr, MAPHEIGHT, MAPWIDTH);
     print_layer_buffered(stdscr, the_map->layers[terrain_layer], the_map);
-    //print_tile(stdscr, the_map, Game_data.player_y, Game_data.player_x);
+    print_tile(stdscr, the_map, Game_data.player_y, Game_data.player_x);
     while (true) {
 
         // If theres been a character input, some do things
