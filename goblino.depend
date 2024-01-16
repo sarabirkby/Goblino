@@ -19,3 +19,14 @@
 
 1702920116 c:\users\sara\desktop\goblino\map_util.c
 
+1705436567 source:c:\users\sara\documents\github\goblino\main.c
+	"main.h"
+
+1705436567 c:\users\sara\documents\github\goblino\main.h
+	<curses.h>
+	<stdlib.h>
+	<stdbool.h>
+	<stdint.h>
+	<string.h>
+	<time.h>
+

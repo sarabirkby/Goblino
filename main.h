@@ -120,6 +120,9 @@ void create_mud(layer_t * layer, map_t * parent_ptr);
 void create_borders(layer_t * layer, map_t * parent_ptr);
 
 
+bool check_can_move(map_t * map_ptr, coord_t y, coord_t x);
+
+
 void replace_and_reprint_tile( WINDOW * win, layer_t * move_layer, map_t * parent_ptr,
                                coord_t new_y, coord_t new_x, coord_t old_y, coord_t old_x );
 

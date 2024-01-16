@@ -81,7 +81,6 @@ layer_t * create_player_layer(map_t * parent_ptr)
 {
     layer_t * p_layer = create_layer(player_layer, parent_ptr);
 
-    Game_data.player_x = 3, Game_data.player_y = 3;
     create_player(p_layer, parent_ptr);
 
     return p_layer;
@@ -173,6 +172,20 @@ void create_borders(layer_t * layer, map_t * parent_ptr)
         }
     }
 }
+
+
+bool check_can_move(map_t * map_ptr, coord_t y, coord_t x)
+{
+    for (int i = 0; i < NUM_LAYER_TYPES; i++) {
+        // If any tiles cannot be entered, you cannot enter
+        if ( !map_ptr->layers[i]->tiles[y][x].can_enter )
+            return false;
+    }
+    // Only if all have can_enter
+    return true;
+}
+
+
 void replace_and_reprint_tile( WINDOW * win, layer_t * move_layer,
                                map_t * parent_ptr, coord_t new_y, coord_t new_x,
                                coord_t old_y, coord_t old_x )
@@ -182,14 +195,17 @@ void replace_and_reprint_tile( WINDOW * win, layer_t * move_layer,
     print_tile( win, parent_ptr, old_y, old_x);
 }
 
-
+// WHY IS THIS CRASHING????
 void move_tile( layer_t * move_layer, coord_t new_y, coord_t new_x,
                 coord_t old_y, coord_t old_x )
 {
     tile_t e_tile = create_empty_tile();
     e_tile.y_pos = old_y, e_tile.x_pos = old_x;
-    // copies old tile to new
-    move_layer->tiles[new_y][new_x] = move_layer->tiles[old_y][old_x];
+    // copy old tile to new
+    tile_t tile_to_copy = move_layer->tiles[old_y][old_x];
+    tile_to_copy.y_pos = new_y, tile_to_copy.x_pos = new_x;
+    move_layer->tiles[new_y][new_x] = tile_to_copy;
+
     // and makes the old tile empty
     move_layer->tiles[old_y][old_x] = e_tile;
 }
@@ -305,6 +321,8 @@ void init_tile_colors( void )
 
 int main( void )
 {
+    Game_data.player_x = 3, Game_data.player_y = 3;
+
     srand(time(NULL));
     initscr();
     refresh();
@@ -326,26 +344,38 @@ int main( void )
 
         case KEY_DOWN:
         case 's':
-            move_and_reprint_down(stdscr, the_map, player_layer, Game_data.player_y, Game_data.player_x);
-            Game_data.player_y++;
+            if (check_can_move(the_map, Game_data.player_y + 1, Game_data.player_x))
+            {
+                move_and_reprint_down(stdscr, the_map, the_map->layers[player_layer], Game_data.player_y, Game_data.player_x);
+                Game_data.player_y++;
+            }
             break;
 
         case KEY_UP:
         case 'w':
-            move_and_reprint_up(stdscr, the_map, player_layer, Game_data.player_y, Game_data.player_x);
-            Game_data.player_y--;
+            if (check_can_move(the_map, Game_data.player_y - 1, Game_data.player_x))
+            {
+                move_and_reprint_up(stdscr, the_map, the_map->layers[player_layer], Game_data.player_y, Game_data.player_x);
+                Game_data.player_y--;
+            }
             break;
 
         case KEY_LEFT:
         case 'a':
-            move_and_reprint_left(stdscr, the_map, player_layer, Game_data.player_y, Game_data.player_x);
-            Game_data.player_x--;
+            if (check_can_move(the_map, Game_data.player_y, Game_data.player_x - 1))
+            {
+                move_and_reprint_left(stdscr, the_map, the_map->layers[player_layer], Game_data.player_y, Game_data.player_x);
+                Game_data.player_x--;
+            }
             break;
 
         case KEY_RIGHT:
         case 'd':
-            move_and_reprint_right(stdscr, the_map, player_layer, Game_data.player_y, Game_data.player_x);
-            Game_data.player_x++;
+            if (check_can_move(the_map, Game_data.player_y, Game_data.player_x + 1))
+            {
+                move_and_reprint_right(stdscr, the_map, the_map->layers[player_layer], Game_data.player_y, Game_data.player_x);
+                Game_data.player_x++;
+            }
             break;
 
         case 'l':
