@@ -195,7 +195,7 @@ void replace_and_reprint_tile( WINDOW * win, layer_t * move_layer,
     print_tile( win, parent_ptr, old_y, old_x);
 }
 
-// WHY IS THIS CRASHING????
+
 void move_tile( layer_t * move_layer, coord_t new_y, coord_t new_x,
                 coord_t old_y, coord_t old_x )
 {
