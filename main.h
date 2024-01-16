@@ -126,6 +126,18 @@ void replace_and_reprint_tile( WINDOW * win, layer_t * move_layer, map_t * paren
 void move_tile( layer_t * move_layer, coord_t new_y, coord_t new_x,
                 coord_t old_y, coord_t old_x );
 
+void move_and_reprint_down( WINDOW * win, map_t * parent_map,
+                            layer_t * move_layer, coord_t old_y, coord_t old_x);
+
+void move_and_reprint_up( WINDOW * win, map_t * parent_map,
+                            layer_t * move_layer, coord_t old_y, coord_t old_x);
+
+void move_and_reprint_left( WINDOW * win, map_t * parent_map,
+                            layer_t * move_layer, coord_t old_y, coord_t old_x);
+
+void move_and_reprint_right( WINDOW * win, map_t * parent_map,
+                            layer_t * move_layer, coord_t old_y, coord_t old_x);
+
 void print_tile(WINDOW * win, map_t * parent_ptr, coord_t y, coord_t x);
 
 void print_layer_buffered(WINDOW * win, layer_t * layer, map_t * parent);
