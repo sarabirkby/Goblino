@@ -2,10 +2,17 @@
 
 game_info_t Game_data;
 
+
+tile_t create_empty_tile( void )
+{
+    tile_t e_tile;
+    e_tile.can_enter = true;
+    e_tile.type = empty_tile;
+
+    return e_tile;
+}
+
 /* checks to see if a map pointer exists, returns true of success */
-
-
-
 map_t * create_map(WINDOW * win, uint8_t height, uint8_t width)
 {
     map_t * new_map = (map_t *) calloc(1, sizeof(map_t));
@@ -179,15 +186,48 @@ void replace_and_reprint_tile( WINDOW * win, layer_t * move_layer,
 void move_tile( layer_t * move_layer, coord_t new_y, coord_t new_x,
                 coord_t old_y, coord_t old_x )
 {
-    tile_t e_tile;
-    e_tile.can_enter = true;
-    e_tile.type = empty_tile;
+    tile_t e_tile = create_empty_tile();
     e_tile.y_pos = old_y, e_tile.x_pos = old_x;
+    // copies old tile to new
     move_layer->tiles[new_y][new_x] = move_layer->tiles[old_y][old_x];
+    // and makes the old tile empty
     move_layer->tiles[old_y][old_x] = e_tile;
 }
 
+void move_and_reprint_down( WINDOW * win, map_t * parent_map,
+                           layer_t * move_layer, coord_t old_y, coord_t old_x)
+{
+    move_tile(move_layer, old_y+1, old_x, old_y, old_x);
+    print_tile(win, parent_map, old_y+1, old_x);
+    print_tile(win, parent_map, old_y, old_x);
+}
 
+void move_and_reprint_up( WINDOW * win, map_t * parent_map,
+                           layer_t * move_layer, coord_t old_y, coord_t old_x)
+{
+    move_tile(move_layer, old_y-1, old_x, old_y, old_x);
+    print_tile(win, parent_map, old_y-1, old_x);
+    print_tile(win, parent_map, old_y, old_x);
+}
+
+void move_and_reprint_left( WINDOW * win, map_t * parent_map,
+                           layer_t * move_layer, coord_t old_y, coord_t old_x)
+{
+    move_tile(move_layer, old_y, old_x-1, old_y, old_x);
+    print_tile(win, parent_map, old_y, old_x-1);
+    print_tile(win, parent_map, old_y, old_x);
+}
+
+void move_and_reprint_right( WINDOW * win, map_t * parent_map,
+                           layer_t * move_layer, coord_t old_y, coord_t old_x)
+{
+    move_tile(move_layer, old_y, old_x+1, old_y, old_x);
+    print_tile(win, parent_map, old_y, old_x+1);
+    print_tile(win, parent_map, old_y, old_x);
+}
+
+// Reprints a tile for every layer, meaning the top-most
+// layer with a non-empty tile will be printed.
 void print_tile(WINDOW *win, map_t * parent_ptr, coord_t y, coord_t x)
 {
     for (int i = 0; i < NUM_LAYER_TYPES; i++) {
@@ -277,7 +317,7 @@ int main( void )
     print_layer_buffered(stdscr, the_map->layers[terrain_layer], the_map);
     print_tile(stdscr, the_map, Game_data.player_y, Game_data.player_x);
     while (true) {
-
+        refresh();
         // If theres been a character input, some do things
         switch (getch()) {
         case 'q':
@@ -286,18 +326,26 @@ int main( void )
 
         case KEY_DOWN:
         case 's':
+            move_and_reprint_down(stdscr, the_map, player_layer, Game_data.player_y, Game_data.player_x);
+            Game_data.player_y++;
             break;
 
         case KEY_UP:
         case 'w':
+            move_and_reprint_up(stdscr, the_map, player_layer, Game_data.player_y, Game_data.player_x);
+            Game_data.player_y--;
             break;
 
         case KEY_LEFT:
         case 'a':
+            move_and_reprint_left(stdscr, the_map, player_layer, Game_data.player_y, Game_data.player_x);
+            Game_data.player_x--;
             break;
 
         case KEY_RIGHT:
         case 'd':
+            move_and_reprint_right(stdscr, the_map, player_layer, Game_data.player_y, Game_data.player_x);
+            Game_data.player_x++;
             break;
 
         case 'l':

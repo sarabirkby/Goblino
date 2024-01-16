@@ -97,7 +97,7 @@ typedef struct {
 
 
 
-
+tile_t create_empty_tile( void );
 
 map_t * create_map(WINDOW * win, uint8_t height, uint8_t width);
 
