@@ -54,9 +54,7 @@ layer_t * create_layer(layer_id_t id, map_t * parent_ptr)
         layer->tiles[h] = (tile_t *) calloc(parent_ptr->width, sizeof(tile_t));
     }
 
-    tile_t e_tile;
-    e_tile.can_enter = true;
-    e_tile.type = empty_tile;
+    tile_t e_tile = create_empty_tile();
 
     for (int h = 0; h < parent_ptr->height; h++) {
         for (int w = 0; w < parent_ptr->width; w++) {
@@ -335,6 +333,42 @@ void print_all_layers(WINDOW * win, map_t * map_ptr)
 }
 
 
+void print_looking_desc(WINDOW * win, map_t * map_ptr)
+{
+    clear_looking_desc(win, map_ptr);
+
+    tile_type_t looking_at;
+    for (int i = 0; i < NUM_LAYER_TYPES; i++) {
+        tile_t current_tile = map_ptr->layers[i]->tiles[Game_data.cursor_y][Game_data.cursor_x];
+        if (current_tile.type != cursor_tile && current_tile.type != empty_tile)
+            looking_at = current_tile.type;
+    }
+
+    mvwaddch(win, map_ptr->height+map_ptr->y_buffer+1, map_ptr->x_buffer, get_char(looking_at));
+
+    attron(COLOR_PAIR(desc_pair));
+    waddch(win, ' ');
+    char * title = get_tile_name(looking_at);
+    for (int i = 0; i < strlen(title); i++) {
+        waddch(win, title[i]);
+    }
+    waddch(win, ':');
+    waddch(win, '\n');
+
+    char * desc = get_tile_desc(looking_at);
+    wmove(win, map_ptr->height+map_ptr->y_buffer+2, map_ptr->x_buffer);
+    for (int i = 0; i < strlen(desc); i++) {
+        waddch(win, desc[i]);
+    }
+
+}
+
+void clear_looking_desc(WINDOW * win, map_t * map_ptr)
+{
+    for (int i=0; i < 4; i++)
+        mvwdeleteln(win, map_ptr->y_buffer+map_ptr->height+1, map_ptr->x_buffer);
+}
+
 char get_char(tile_type_t type)
 {
     switch(type) {
@@ -365,6 +399,62 @@ char get_char(tile_type_t type)
 }
 
 
+char * get_tile_name(tile_type_t type)
+{
+
+    switch(type) {
+    case empty_tile:
+        return "Empty Tile";
+
+    case player_tile:
+        return "Player";
+
+    case border_tile:
+        return "Border";
+
+    case grass1_tile:
+        return "Soft Grass";
+
+    case grass2_tile:
+        return "Spiky Grass";
+
+    case mud_tile:
+        return "Mud";
+
+    default:
+        fprintf(stderr, "type not accounted for!");
+    }
+}
+
+
+char * get_tile_desc(tile_type_t type)
+{
+    switch(type) {
+    case empty_tile:
+        return "There's nothing here.";
+
+    case player_tile:
+        return "A very handsome and courageous goblin king.";
+
+    case border_tile:
+        return "The edge of this area.";
+
+    case grass1_tile:
+        return "Short, soft grass.";
+
+    case grass2_tile:
+        return "Tall, spiky grass.";
+
+    case mud_tile:
+        return "Sticky brown mud. Yuck.";
+
+    default:
+        fprintf(stderr, "You shouldn't be able to look at this.");
+
+    }
+}
+
+
 void init_tile_colors( void )
 {
 
@@ -373,10 +463,13 @@ void init_tile_colors( void )
     init_color(COLOR_TAN, 218, 165, 32);
     init_color(COLOR_LTGREEN, 124, 252,0);
     init_color(COLOR_DKRED, 178, 34, 34);
+    init_color(COLOR_BLACK, 0, 0, 0);
+    init_color(COLOR_GRAY, 96, 96, 96);
 
     init_pair(empty_pair, COLOR_WHITE, COLOR_BLACK);
     init_pair(player_pair, COLOR_WHITE, COLOR_RED);
     init_pair(cursor_pair, COLOR_WHITE, COLOR_YELLOW);
+    init_pair(desc_pair, COLOR_WHITE, COLOR_BLACK);
     init_pair(border_pair, COLOR_RED, COLOR_DKRED);
     init_pair(grass1_pair, COLOR_GREEN, COLOR_LTGREEN);
     init_pair(grass2_pair, COLOR_LTGREEN, COLOR_GREEN);
@@ -423,6 +516,7 @@ int main( void )
                     move_and_reprint_down( stdscr, the_map, the_map->layers[cursor_layer],
                                            Game_data.cursor_y, Game_data.cursor_x);
                     Game_data.cursor_y++;
+                    print_looking_desc(stdscr, the_map);
                 }
             }
             else if (check_can_move(the_map, Game_data.player_y + 1, Game_data.player_x))
@@ -441,6 +535,7 @@ int main( void )
                     move_and_reprint_up( stdscr, the_map, the_map->layers[cursor_layer],
                                            Game_data.cursor_y, Game_data.cursor_x);
                     Game_data.cursor_y--;
+                    print_looking_desc(stdscr, the_map);
                 }
             }
             else if (check_can_move(the_map, Game_data.player_y - 1, Game_data.player_x))
@@ -458,6 +553,7 @@ int main( void )
                     move_and_reprint_left( stdscr, the_map, the_map->layers[cursor_layer],
                                            Game_data.cursor_y, Game_data.cursor_x);
                     Game_data.cursor_x--;
+                    print_looking_desc(stdscr, the_map);
                 }
             }
             else if (check_can_move(the_map, Game_data.player_y, Game_data.player_x - 1))
@@ -475,6 +571,7 @@ int main( void )
                     move_and_reprint_right( stdscr, the_map, the_map->layers[cursor_layer],
                                            Game_data.cursor_y, Game_data.cursor_x);
                     Game_data.cursor_x++;
+                    print_looking_desc(stdscr, the_map);
                 }
             }
             else if (check_can_move(the_map, Game_data.player_y, Game_data.player_x + 1))
@@ -492,13 +589,18 @@ int main( void )
                 destroy_and_reprint_tile( stdscr, the_map, the_map->layers[cursor_layer],
                                           Game_data.cursor_y, Game_data.cursor_x );
 
+                clear_looking_desc(stdscr, the_map);
+
             }
             else {
                 Game_data.look_mode = true;
+                Game_data.cursor_y = Game_data.player_y, Game_data.cursor_x = Game_data.player_x;
                 curs_set(2);
                 create_cursor(the_map->layers[cursor_layer]);
                 move(Game_data.cursor_y+the_map->y_buffer, Game_data.cursor_x+the_map->x_buffer);
                 print_tile(stdscr, the_map, Game_data.cursor_y, Game_data.cursor_x);
+
+                print_looking_desc(stdscr, the_map);
             }
             break;
         }
