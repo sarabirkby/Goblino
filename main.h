@@ -14,7 +14,7 @@
 #define MAPHEIGHT 20
 
 
-#define NUM_LAYER_TYPES 2
+#define NUM_LAYER_TYPES 3
 
 #define COLOR_BROWN COLOR_WHITE+1
 #define COLOR_TAN COLOR_BROWN+1
@@ -25,8 +25,8 @@
 typedef enum {
     empty_tile,
     player_tile,
+    cursor_tile,
     border_tile,
-    looking_cursor_tile,
     grass1_tile,
     grass2_tile,
     mud_tile
@@ -35,7 +35,7 @@ typedef enum {
 typedef enum {
     empty_pair,
     player_pair,
-    looking_cursor_pair,
+    cursor_pair,
     border_pair,
     grass1_pair,
     grass2_pair,
@@ -65,7 +65,7 @@ typedef struct {
     coord_t cursor_y;
     coord_t cursor_x;
 
-
+    bool look_mode;
 } game_info_t;
 
 typedef struct {
@@ -109,7 +109,14 @@ layer_t * create_terrain_layer(map_t * parent_ptr);
 
 layer_t * create_player_layer(map_t * parent_ptr);
 
-void create_player(layer_t * layer, map_t * parent_ptr);
+layer_t * create_cursor_layer(map_t * parent_ptr);
+
+
+void destroy_tile(layer_t * layer, coord_t y, coord_t x);
+
+void destroy_and_reprint_tile( WINDOW * win, map_t * parent_ptr, layer_t * layer,
+                               coord_t y, coord_t x );
+
 
 void create_grasslands(layer_t * layer, map_t * parent_ptr);
 
@@ -118,6 +125,12 @@ void create_grass(layer_t * layer, map_t * parent_ptr);
 void create_mud(layer_t * layer, map_t * parent_ptr);
 
 void create_borders(layer_t * layer, map_t * parent_ptr);
+
+
+void create_player(layer_t * layer);
+
+
+void create_cursor(layer_t * layer);
 
 
 bool check_can_move(map_t * map_ptr, coord_t y, coord_t x);
@@ -146,5 +159,7 @@ void print_tile(WINDOW * win, map_t * parent_ptr, coord_t y, coord_t x);
 void print_layer_buffered(WINDOW * win, layer_t * layer, map_t * parent);
 
 char get_char(tile_type_t type);
+
+void move_cursor_buffered( map_t * map_ptr, coord_t y, coord_t x );
 
 void init_tile_colors( void );
