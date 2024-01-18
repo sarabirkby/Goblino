@@ -66,6 +66,11 @@ typedef uint8_t coord_t;
 
 
 typedef struct {
+    uint8_t height;
+    uint8_t width;
+
+    double condition;
+
     coord_t min_y;
     coord_t min_x;
 

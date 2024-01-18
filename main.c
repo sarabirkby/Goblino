@@ -4,6 +4,7 @@
 game_info_t Game_data;
 
 
+
 tile_t create_empty_tile( void )
 {
     tile_t e_tile;
@@ -13,9 +14,12 @@ tile_t create_empty_tile( void )
     return e_tile;
 }
 
+
 /* checks to see if a map pointer exists, returns true of success */
 map_t * create_map(WINDOW * win, uint8_t height, uint8_t width)
 {
+
+
     map_t * new_map = (map_t *) calloc(1, sizeof(map_t));
 
     new_map->height = height;
@@ -179,6 +183,7 @@ void create_buildings(layer_t * layer, map_t * parent_ptr)
     int num_buildings = rand() % 3 + 1;
 
     tile_t w_tile, f_tile;
+
     w_tile.can_enter = false;
     w_tile.type = wall_tile;
 
@@ -193,26 +198,25 @@ void create_buildings(layer_t * layer, map_t * parent_ptr)
         coord_t mid_y = parent_ptr->height / 2;
         coord_t mid_x = parent_ptr->width / 2;
 
-        uint8_t building_height = rand() %  parent_ptr->height / 2 + 3;
+        buildings[i].height = rand() %  parent_ptr->height / 2 + 3;
 
-        uint8_t building_width = rand() % parent_ptr->width / 2 + 3;
+        buildings[i].width = rand() % parent_ptr->width / 2 + 3;
 
-
-        int loop_y_start, loop_x_start, loop_y_end, loop_x_end;
+        uint8_t loop_y_start, loop_x_start, loop_y_end, loop_x_end;
         if (starting_y < mid_y) {
             loop_y_start = starting_y;
-            loop_y_end = starting_y + building_height;
+            loop_y_end = starting_y + buildings[i].height;
         }
         else {  // bottom
-            loop_y_start = starting_y - building_height;
+            loop_y_start = starting_y - buildings[i].height;
             loop_y_end = starting_y;
         }
         if (starting_x < mid_x) {
                 loop_x_start = starting_x;
-                loop_x_end = starting_x + building_width;
+                loop_x_end = starting_x + buildings[i].width;
         }
         else {
-                loop_x_start = starting_x - building_width;
+                loop_x_start = starting_x - buildings[i].width;
                 loop_x_end = starting_x;
         }
 
@@ -222,31 +226,40 @@ void create_buildings(layer_t * layer, map_t * parent_ptr)
         buildings[i].max_y = loop_y_end;
         buildings[i].max_x = loop_x_end;
 
-        bool do_build;
-        for (int y = loop_y_start; y < loop_y_end; y++) {
-            for (int x = loop_x_start; x < loop_x_end; x++) {
+        buildings[i].condition = get_gaussian();
+
+        if (buildings[i].condition < 0 || buildings[i].condition > 1) {
+            fprintf(stderr, "out of bounds: %d", buildings[i].condition);
+        }
+    }
+
+
+
+    for (int i = 0; i < num_buildings; i++) {
+        for (int y = buildings[i].min_y; y <= buildings[i].max_y; y++) {
+            for (int x = buildings[i].min_x; x <= buildings[i].max_x; x++) {
 
                 bool do_build = true;
-                for (int j = 0; j < i; j++) {
-                    if ( y > buildings[j].min_y && y < buildings[j].max_y
-                         && x > buildings[j].min_x && x < buildings[j].max_x )
+                for (int j = 0; j < num_buildings; j++) {
+                    if ( buildings[j].height * buildings[j].width
+                         > buildings[i].height * buildings[i].width
+                         && y >= buildings[j].min_y && y <= buildings[j].max_y
+                         && x >= buildings[j].min_x && x <= buildings[j].max_x )
                         do_build = false;
                 }
 
                 if (do_build) {
-                    if ( y == loop_y_start || x == loop_x_start
-                         || y == loop_y_end-1 || x == loop_x_end-1 ) {
-                        if( rand() % 2 == 0 ) {
+                    if ( y == buildings[i].min_y || x == buildings[i].min_x
+                         || y == buildings[i].max_y || x == buildings[i].max_x ) {
+                        if( rand() % 100 <= (int)(buildings[i].condition * 100) ) {
                             w_tile.y_pos = y, w_tile.x_pos = x;
 
                             layer->tiles[y][x] = w_tile;
                         }
                     }
-                    else {
-                        if ( rand() % 3 == 0) {
-                            f_tile.y_pos = y, f_tile.x_pos = x;
-                            layer->tiles[y][x] = f_tile;
-                        }
+                    else if ( rand() % 100 <= buildings[i].condition * 100) {
+                        f_tile.y_pos = y, f_tile.x_pos = x;
+                        layer->tiles[y][x] = f_tile;
                     }
                 }
             }
@@ -485,6 +498,7 @@ char get_char(tile_type_t type)
         return '~';
     default:
         fprintf(stderr, "tile type does not exist: %d\n", type);
+        return 'N';
     }
 }
 
@@ -519,6 +533,7 @@ char * get_tile_name(tile_type_t type)
 
     default:
         fprintf(stderr, "type not accounted for!");
+        return "You shouldn't see this.";
     }
 }
 
@@ -539,7 +554,7 @@ char * get_tile_desc(tile_type_t type)
         return "A strong, sturdy wall. No getting through this.";
 
     case floor_tile:
-        return "A sturdy patch of floor. Feels great to walk on!";
+        return "A seemingly stable wooden floor. Great for walking on.";
 
     case grass1_tile:
         return "Short, soft grass.";
@@ -552,7 +567,7 @@ char * get_tile_desc(tile_type_t type)
 
     default:
         fprintf(stderr, "You shouldn't be able to look at this.");
-
+        return "You shouldn't see this.";
     }
 }
 
