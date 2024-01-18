@@ -31,6 +31,7 @@ typedef enum {
     desc_tile,
     border_tile,
     wall_tile,
+    floor_tile,
     grass1_tile,
     grass2_tile,
     mud_tile
@@ -42,6 +43,7 @@ typedef enum {
     cursor_pair,
     border_pair,
     wall_pair,
+    floor_pair,
     grass1_pair,
     grass2_pair,
     mud_pair,
@@ -61,6 +63,15 @@ typedef enum {
 } layer_id_t;
 
 typedef uint8_t coord_t;
+
+
+typedef struct {
+    coord_t min_y;
+    coord_t min_x;
+
+    coord_t max_y;
+    coord_t max_x;
+} building_t;
 
 
 typedef struct {
@@ -130,7 +141,7 @@ void create_grass(layer_t * layer, map_t * parent_ptr);
 
 void create_mud(layer_t * layer, map_t * parent_ptr);
 
-void create_walls(layer_t * layer, map_t * parent_ptr);
+void create_buildings(layer_t * layer, map_t * parent_ptr);
 
 void create_borders(layer_t * layer, map_t * parent_ptr);
 

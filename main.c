@@ -117,7 +117,7 @@ void create_grasslands(layer_t * layer, map_t * parent_ptr)
 {
     create_grass(layer, parent_ptr);
     create_mud(layer, parent_ptr);
-    create_walls(layer, parent_ptr);
+    create_buildings(layer, parent_ptr);
     create_borders(layer, parent_ptr);
 }
 
@@ -142,8 +142,8 @@ void create_grass(layer_t * layer, map_t * parent_ptr)
             default:
                 fprintf(stderr, "rand mod out of range");
             }
-
             layer->tiles[h][w] = g_tile;
+
         }
     }
 }
@@ -171,13 +171,21 @@ void create_mud(layer_t * layer, map_t * parent_ptr)
 }
 
 // should allow only one starting coord per quadrant
-void create_walls(layer_t * layer, map_t * parent_ptr)
+
+// Current idea: each building has a random value between 0 and 1 representing the amount of damage it has suffered.
+// This determines how many wall tiles are left
+void create_buildings(layer_t * layer, map_t * parent_ptr)
 {
     int num_buildings = rand() % 3 + 1;
 
-    tile_t w_tile;
+    tile_t w_tile, f_tile;
     w_tile.can_enter = false;
     w_tile.type = wall_tile;
+
+    f_tile.can_enter = true;
+    f_tile.type = floor_tile;
+
+    building_t * buildings = calloc(num_buildings, sizeof(building_t));
     for (int i = 0; i < num_buildings; i++) {
         coord_t starting_y = rand() % parent_ptr->height;
         coord_t starting_x = rand() % parent_ptr->width;
@@ -185,9 +193,10 @@ void create_walls(layer_t * layer, map_t * parent_ptr)
         coord_t mid_y = parent_ptr->height / 2;
         coord_t mid_x = parent_ptr->width / 2;
 
-        uint8_t building_height = rand() %  parent_ptr->height / 2 + 2;
+        uint8_t building_height = rand() %  parent_ptr->height / 2 + 3;
 
-        uint8_t building_width = rand() % parent_ptr->width / 2 + 2;
+        uint8_t building_width = rand() % parent_ptr->width / 2 + 3;
+
 
         int loop_y_start, loop_x_start, loop_y_end, loop_x_end;
         if (starting_y < mid_y) {
@@ -207,13 +216,37 @@ void create_walls(layer_t * layer, map_t * parent_ptr)
                 loop_x_end = starting_x;
         }
 
+
+        buildings[i].min_y = loop_y_start;
+        buildings[i].min_x = loop_x_start;
+        buildings[i].max_y = loop_y_end;
+        buildings[i].max_x = loop_x_end;
+
+        bool do_build;
         for (int y = loop_y_start; y < loop_y_end; y++) {
             for (int x = loop_x_start; x < loop_x_end; x++) {
                 if ( y == loop_y_start || x == loop_x_start
-                     || y == loop_y_end-1 || x == loop_x_end-1) {
-                    if( rand() % 3 < 2 ) {
-                        w_tile.y_pos = y, w_tile.x_pos = x;
-                        layer->tiles[y][x] = w_tile;
+                     || y == loop_y_end-1 || x == loop_x_end-1 ) {
+
+                    bool do_build = true;
+                    for (int j = 0; j < i; j++) {
+                        if ( y > buildings[j].min_y && y < buildings[j].max_y
+                             && x > buildings[j].min_x && x < buildings[j].max_x )
+                            do_build = false;
+                    }
+                    if (do_build) {
+                        if( rand() % 3 < 2 ) {
+                            w_tile.y_pos = y, w_tile.x_pos = x;
+
+                            layer->tiles[y][x] = w_tile;
+                        }
+                        else {
+
+                            if ( rand() % 2 == 0) {
+                                f_tile.y_pos = y, f_tile.x_pos = x;
+                                layer->tiles[y][x] = f_tile;
+                            }
+                        }
                     }
                 }
             }
@@ -399,20 +432,18 @@ void print_looking_desc(WINDOW * win, map_t * map_ptr)
     if (looking_at !=  empty_tile)
         mvwaddch(win, map_ptr->height+map_ptr->y_buffer+1, map_ptr->x_buffer, get_char(looking_at));
 
+    // Clears color
     attron(COLOR_PAIR(wall_pair));
+    attroff(COLOR_PAIR(wall_pair));
+
     waddch(win, ' ');
     char * title = get_tile_name(looking_at);
-    for (int i = 0; i < strlen(title); i++) {
-        waddch(win, title[i]);
-    }
-    waddch(win, ':');
-    waddch(win, '\n');
+    waddstr(win, title);
+    waddstr(win, ":\n");
 
     char * desc = get_tile_desc(looking_at);
     wmove(win, map_ptr->height+map_ptr->y_buffer+2, map_ptr->x_buffer);
-    for (int i = 0; i < strlen(desc); i++) {
-        waddch(win, desc[i]);
-    }
+    waddstr(win, desc);
 
 }
 
@@ -440,6 +471,9 @@ char get_char(tile_type_t type)
     case wall_tile:
         attron(COLOR_PAIR(wall_pair));
         return 'O';
+    case floor_tile:
+        attron(COLOR_PAIR(floor_pair));
+        return '=';
     case grass1_tile:
         attron(COLOR_PAIR(grass1_pair));
         return '.';
@@ -471,6 +505,9 @@ char * get_tile_name(tile_type_t type)
     case wall_tile:
         return "Wall";
 
+    case floor_tile:
+        return "Floor";
+
     case grass1_tile:
         return "Soft Grass";
 
@@ -497,6 +534,12 @@ char * get_tile_desc(tile_type_t type)
 
     case border_tile:
         return "The edge of this area.";
+
+    case wall_tile:
+        return "A strong, sturdy wall. No getting through this.";
+
+    case floor_tile:
+        return "A sturdy patch of floor. Feels great to walk on!";
 
     case grass1_tile:
         return "Short, soft grass.";
@@ -529,6 +572,7 @@ void init_tile_colors( void )
     init_pair(player_pair, COLOR_WHITE, COLOR_RED);
     init_pair(cursor_pair, COLOR_WHITE, COLOR_YELLOW);
     init_pair(wall_pair, COLOR_WHITE, COLOR_GRAY);
+    init_pair(floor_pair, COLOR_TAN, COLOR_BROWN);
     init_pair(border_pair, COLOR_RED, COLOR_DKRED);
     init_pair(grass1_pair, COLOR_GREEN, COLOR_LTGREEN);
     init_pair(grass2_pair, COLOR_LTGREEN, COLOR_GREEN);
