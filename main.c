@@ -225,27 +225,27 @@ void create_buildings(layer_t * layer, map_t * parent_ptr)
         bool do_build;
         for (int y = loop_y_start; y < loop_y_end; y++) {
             for (int x = loop_x_start; x < loop_x_end; x++) {
-                if ( y == loop_y_start || x == loop_x_start
-                     || y == loop_y_end-1 || x == loop_x_end-1 ) {
 
-                    bool do_build = true;
-                    for (int j = 0; j < i; j++) {
-                        if ( y > buildings[j].min_y && y < buildings[j].max_y
-                             && x > buildings[j].min_x && x < buildings[j].max_x )
-                            do_build = false;
-                    }
-                    if (do_build) {
-                        if( rand() % 3 < 2 ) {
+                bool do_build = true;
+                for (int j = 0; j < i; j++) {
+                    if ( y > buildings[j].min_y && y < buildings[j].max_y
+                         && x > buildings[j].min_x && x < buildings[j].max_x )
+                        do_build = false;
+                }
+
+                if (do_build) {
+                    if ( y == loop_y_start || x == loop_x_start
+                         || y == loop_y_end-1 || x == loop_x_end-1 ) {
+                        if( rand() % 2 == 0 ) {
                             w_tile.y_pos = y, w_tile.x_pos = x;
 
                             layer->tiles[y][x] = w_tile;
                         }
-                        else {
-
-                            if ( rand() % 2 == 0) {
-                                f_tile.y_pos = y, f_tile.x_pos = x;
-                                layer->tiles[y][x] = f_tile;
-                            }
+                    }
+                    else {
+                        if ( rand() % 3 == 0) {
+                            f_tile.y_pos = y, f_tile.x_pos = x;
+                            layer->tiles[y][x] = f_tile;
                         }
                     }
                 }
