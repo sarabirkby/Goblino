@@ -1,5 +1,6 @@
 #include "main.h"
 
+
 game_info_t Game_data;
 
 
@@ -116,6 +117,7 @@ void create_grasslands(layer_t * layer, map_t * parent_ptr)
 {
     create_grass(layer, parent_ptr);
     create_mud(layer, parent_ptr);
+    create_walls(layer, parent_ptr);
     create_borders(layer, parent_ptr);
 }
 
@@ -168,6 +170,56 @@ void create_mud(layer_t * layer, map_t * parent_ptr)
 
 }
 
+// should allow only one starting coord per quadrant
+void create_walls(layer_t * layer, map_t * parent_ptr)
+{
+    int num_buildings = rand() % 3 + 1;
+
+    tile_t w_tile;
+    w_tile.can_enter = false;
+    w_tile.type = wall_tile;
+    for (int i = 0; i < num_buildings; i++) {
+        coord_t starting_y = rand() % parent_ptr->height;
+        coord_t starting_x = rand() % parent_ptr->width;
+
+        coord_t mid_y = parent_ptr->height / 2;
+        coord_t mid_x = parent_ptr->width / 2;
+
+        uint8_t building_height = rand() %  parent_ptr->height / 2 + 2;
+
+        uint8_t building_width = rand() % parent_ptr->width / 2 + 2;
+
+        int loop_y_start, loop_x_start, loop_y_end, loop_x_end;
+        if (starting_y < mid_y) {
+            loop_y_start = starting_y;
+            loop_y_end = starting_y + building_height;
+        }
+        else {  // bottom
+            loop_y_start = starting_y - building_height;
+            loop_y_end = starting_y;
+        }
+        if (starting_x < mid_x) {
+                loop_x_start = starting_x;
+                loop_x_end = starting_x + building_width;
+        }
+        else {
+                loop_x_start = starting_x - building_width;
+                loop_x_end = starting_x;
+        }
+
+        for (int y = loop_y_start; y < loop_y_end; y++) {
+            for (int x = loop_x_start; x < loop_x_end; x++) {
+                if ( y == loop_y_start || x == loop_x_start
+                     || y == loop_y_end-1 || x == loop_x_end-1) {
+                    if( rand() % 3 < 2 ) {
+                        w_tile.y_pos = y, w_tile.x_pos = x;
+                        layer->tiles[y][x] = w_tile;
+                    }
+                }
+            }
+        }
+    }
+}
 
 void create_borders(layer_t * layer, map_t * parent_ptr)
 {
@@ -337,16 +389,17 @@ void print_looking_desc(WINDOW * win, map_t * map_ptr)
 {
     clear_looking_desc(win, map_ptr);
 
-    tile_type_t looking_at;
+    tile_type_t looking_at = empty_tile;
     for (int i = 0; i < NUM_LAYER_TYPES; i++) {
         tile_t current_tile = map_ptr->layers[i]->tiles[Game_data.cursor_y][Game_data.cursor_x];
         if (current_tile.type != cursor_tile && current_tile.type != empty_tile)
             looking_at = current_tile.type;
     }
 
-    mvwaddch(win, map_ptr->height+map_ptr->y_buffer+1, map_ptr->x_buffer, get_char(looking_at));
+    if (looking_at !=  empty_tile)
+        mvwaddch(win, map_ptr->height+map_ptr->y_buffer+1, map_ptr->x_buffer, get_char(looking_at));
 
-    attron(COLOR_PAIR(desc_pair));
+    attron(COLOR_PAIR(wall_pair));
     waddch(win, ' ');
     char * title = get_tile_name(looking_at);
     for (int i = 0; i < strlen(title); i++) {
@@ -384,6 +437,9 @@ char get_char(tile_type_t type)
     case border_tile:
         attron(COLOR_PAIR(border_pair));
         return '#';
+    case wall_tile:
+        attron(COLOR_PAIR(wall_pair));
+        return 'O';
     case grass1_tile:
         attron(COLOR_PAIR(grass1_pair));
         return '.';
@@ -411,6 +467,9 @@ char * get_tile_name(tile_type_t type)
 
     case border_tile:
         return "Border";
+
+    case wall_tile:
+        return "Wall";
 
     case grass1_tile:
         return "Soft Grass";
@@ -469,7 +528,7 @@ void init_tile_colors( void )
     init_pair(empty_pair, COLOR_WHITE, COLOR_BLACK);
     init_pair(player_pair, COLOR_WHITE, COLOR_RED);
     init_pair(cursor_pair, COLOR_WHITE, COLOR_YELLOW);
-    init_pair(desc_pair, COLOR_WHITE, COLOR_BLACK);
+    init_pair(wall_pair, COLOR_WHITE, COLOR_GRAY);
     init_pair(border_pair, COLOR_RED, COLOR_DKRED);
     init_pair(grass1_pair, COLOR_GREEN, COLOR_LTGREEN);
     init_pair(grass2_pair, COLOR_LTGREEN, COLOR_GREEN);

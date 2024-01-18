@@ -4,8 +4,9 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
-//#include "map_util.c"
+#include "gob_util.h"
 
 #define PDC_RGB
 #define N_COLORS 8
@@ -27,8 +28,9 @@ typedef enum {
     empty_tile,
     player_tile,
     cursor_tile,
-    desc_pair,
+    desc_tile,
     border_tile,
+    wall_tile,
     grass1_tile,
     grass2_tile,
     mud_tile
@@ -39,6 +41,7 @@ typedef enum {
     player_pair,
     cursor_pair,
     border_pair,
+    wall_pair,
     grass1_pair,
     grass2_pair,
     mud_pair,
@@ -126,6 +129,8 @@ void create_grasslands(layer_t * layer, map_t * parent_ptr);
 void create_grass(layer_t * layer, map_t * parent_ptr);
 
 void create_mud(layer_t * layer, map_t * parent_ptr);
+
+void create_walls(layer_t * layer, map_t * parent_ptr);
 
 void create_borders(layer_t * layer, map_t * parent_ptr);
 
