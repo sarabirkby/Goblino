@@ -174,10 +174,11 @@ void create_mud(layer_t * layer, map_t * parent_ptr)
 
 }
 
-// should allow only one starting coord per quadrant
-
-// Current idea: each building has a random value between 0 and 1 representing the amount of damage it has suffered.
-// This determines how many wall tiles are left
+/** @fn void create_buildings(layer_t * layer, map_t * parent_ptr)
+  * @brief Creates 1-3 buildings across the terrain map.
+  * @param layer  The  pointer to the layer which the building will be added to.
+  * @param parent_ptr  The pointer to the map the layer is a member of.
+  */
 void create_buildings(layer_t * layer, map_t * parent_ptr)
 {
     int num_buildings = rand() % 3 + 1;
@@ -186,7 +187,6 @@ void create_buildings(layer_t * layer, map_t * parent_ptr)
 
     w_tile.can_enter = false;
     w_tile.type = wall_tile;
-
     f_tile.can_enter = true;
     f_tile.type = floor_tile;
 
@@ -198,7 +198,7 @@ void create_buildings(layer_t * layer, map_t * parent_ptr)
         coord_t mid_y = parent_ptr->height / 2;
         coord_t mid_x = parent_ptr->width / 2;
 
-        buildings[i].height = rand() %  parent_ptr->height / 2 + 3;
+        buildings[i].height = rand() % parent_ptr->height / 2 + 3;
 
         buildings[i].width = rand() % parent_ptr->width / 2 + 3;
 
@@ -257,7 +257,7 @@ void create_buildings(layer_t * layer, map_t * parent_ptr)
                             layer->tiles[y][x] = w_tile;
                         }
                     }
-                    else if ( rand() % 100 <= buildings[i].condition * 100) {
+                    else if ( rand() % 100 <= (int)(buildings[i].condition * 100) ) {
                         f_tile.y_pos = y, f_tile.x_pos = x;
                         layer->tiles[y][x] = f_tile;
                     }
@@ -405,7 +405,7 @@ void print_tile(WINDOW *win, map_t * parent_ptr, coord_t y, coord_t x)
 }
 
 
-void print_layer_buffered(WINDOW *win, layer_t * layer, map_t * parent_ptr)
+void print_layer_buffered(WINDOW * win, layer_t * layer, map_t * parent_ptr)
 {
 
     for (int h = 0; h < parent_ptr->height; h++) {
@@ -615,6 +615,7 @@ int main( void )
     keypad(stdscr, true);
 
     init_tile_colors();
+
     map_t * the_map = create_map(stdscr, MAPHEIGHT, MAPWIDTH);
     print_all_layers(stdscr, the_map);
     while (true) {
@@ -629,7 +630,7 @@ int main( void )
         case KEY_DOWN:
         case 's':
             if (Game_data.look_mode) {
-                if(check_can_look(the_map, Game_data.cursor_y + 1, Game_data.cursor_x))
+                if (check_can_look(the_map, Game_data.cursor_y + 1, Game_data.cursor_x))
                 {
                     move_and_reprint_down( stdscr, the_map, the_map->layers[cursor_layer],
                                            Game_data.cursor_y, Game_data.cursor_x);
@@ -648,7 +649,7 @@ int main( void )
         case KEY_UP:
         case 'w':
             if (Game_data.look_mode) {
-                if(check_can_look(the_map, Game_data.cursor_y - 1, Game_data.cursor_x))
+                if (check_can_look(the_map, Game_data.cursor_y - 1, Game_data.cursor_x))
                 {
                     move_and_reprint_up( stdscr, the_map, the_map->layers[cursor_layer],
                                            Game_data.cursor_y, Game_data.cursor_x);
@@ -666,7 +667,7 @@ int main( void )
         case KEY_LEFT:
         case 'a':
             if (Game_data.look_mode) {
-                if(check_can_look(the_map, Game_data.cursor_y, Game_data.cursor_x - 1))
+                if (check_can_look(the_map, Game_data.cursor_y, Game_data.cursor_x - 1))
                 {
                     move_and_reprint_left( stdscr, the_map, the_map->layers[cursor_layer],
                                            Game_data.cursor_y, Game_data.cursor_x);
@@ -684,7 +685,7 @@ int main( void )
         case KEY_RIGHT:
         case 'd':
             if (Game_data.look_mode) {
-                if(check_can_look(the_map, Game_data.cursor_y, Game_data.cursor_x + 1))
+                if (check_can_look(the_map, Game_data.cursor_y, Game_data.cursor_x + 1))
                 {
                     move_and_reprint_right( stdscr, the_map, the_map->layers[cursor_layer],
                                            Game_data.cursor_y, Game_data.cursor_x);
@@ -701,7 +702,7 @@ int main( void )
 
         case 'l':
         case 'k':
-            if(Game_data.look_mode) {
+            if (Game_data.look_mode) {
                 Game_data.look_mode = false;
                 curs_set(FALSE);
                 destroy_and_reprint_tile( stdscr, the_map, the_map->layers[cursor_layer],

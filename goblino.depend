@@ -19,10 +19,10 @@
 
 1702920116 c:\users\sara\desktop\goblino\map_util.c
 
-1705616741 source:c:\users\sara\documents\github\goblino\main.c
+1705637416 source:c:\users\sara\documents\github\goblino\main.c
 	"main.h"
 
-1705614212 c:\users\sara\documents\github\goblino\main.h
+1705619395 c:\users\sara\documents\github\goblino\main.h
 	<curses.h>
 	<stdlib.h>
 	<stdbool.h>
