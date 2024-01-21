@@ -1,3 +1,5 @@
 bin/
 obj/
 bin/Release/goblino.exe
+goblino.layout
+goblino.depend
