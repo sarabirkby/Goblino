@@ -28,6 +28,7 @@ typedef enum {
     empty_tile,
     player_tile,
     cursor_tile,
+    lackey_tile,
     desc_tile,
     border_tile,
     wall_tile,
@@ -41,6 +42,7 @@ typedef enum {
     empty_pair,
     player_pair,
     cursor_pair,
+    lackey_pair,
     border_pair,
     wall_pair,
     floor_pair,
@@ -58,6 +60,7 @@ typedef enum {
 
 typedef enum {
     terrain_layer,
+    enemy_layer,
     player_layer,
     cursor_layer
 } layer_id_t;
@@ -79,15 +82,7 @@ typedef struct {
 } building_t;
 
 
-typedef struct {
-    coord_t player_y;
-    coord_t player_x;
 
-    coord_t cursor_y;
-    coord_t cursor_x;
-
-    bool look_mode;
-} game_info_t;
 
 
 typedef struct {
@@ -117,19 +112,47 @@ typedef struct {
 } map_t;
 
 
+typedef struct {
+    coord_t y_pos;
+    coord_t x_pos;
 
+    tile_t * sight_tiles;
+
+    bool attacking_player;
+} enemy_t;
+
+typedef struct {
+    coord_t player_y;
+    coord_t player_x;
+
+    coord_t cursor_y;
+    coord_t cursor_x;
+
+    bool look_mode;
+
+    uint8_t num_enemies;
+
+    enemy_t * enemies;
+} game_info_t;
+
+
+
+void create_enemy_data( map_t * parent_ptr );
 
 tile_t create_empty_tile( void );
 
 map_t * create_map(WINDOW * win, uint8_t height, uint8_t width);
 
-void get_layers(map_t * parent_ptr);
+void get_layers( map_t * parent_ptr );
+
 
 layer_t * create_layer(layer_id_t id, map_t * parent_ptr);
 
 layer_t * create_terrain_layer(map_t * parent_ptr);
 
 layer_t * create_player_layer(map_t * parent_ptr);
+
+layer_t * create_enemy_layer(map_t * parent_ptr);
 
 layer_t * create_cursor_layer(map_t * parent_ptr);
 
@@ -154,12 +177,19 @@ void create_borders(layer_t * layer, map_t * parent_ptr);
 void create_player(layer_t * layer);
 
 
+void create_enemies( layer_t * layer );
+
+void create_lackey(layer_t * layer, coord_t y, coord_t x);
+
+
 void create_cursor(layer_t * layer);
 
 
 bool check_can_move(map_t * map_ptr, coord_t y, coord_t x);
 
 bool check_can_look(map_t * map_ptr, coord_t y, coord_t x);
+
+bool check_spawn_loc(map_t * map_ptr, layer_id_t id, coord_t y, coord_t x);
 
 
 void replace_and_reprint_tile( WINDOW * win, layer_t * move_layer, map_t * parent_ptr,

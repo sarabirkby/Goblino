@@ -4,6 +4,32 @@
 game_info_t Game_data;
 
 
+void create_enemy_data( map_t * parent_ptr )
+{
+
+    enemy_t * enemy = (enemy_t *) calloc(Game_data.num_enemies, sizeof(enemy_t));
+
+    for (int i = 0; i < Game_data.num_enemies; i++) {
+
+        coord_t y, x;
+
+        do {
+            y = rand() % parent_ptr->height;
+            x = rand() % parent_ptr->width;
+        } while (!check_spawn_loc(parent_ptr, enemy_layer, y, x));
+
+        enemy[i].y_pos = y;
+        enemy[i].x_pos = x;
+        enemy[i].attacking_player = false;
+        enemy[i].sight_tiles = NULL;
+
+
+    }
+
+    Game_data.enemies = enemy;
+
+}
+
 
 tile_t create_empty_tile( void )
 {
@@ -18,8 +44,6 @@ tile_t create_empty_tile( void )
 /* checks to see if a map pointer exists, returns true of success */
 map_t * create_map(WINDOW * win, uint8_t height, uint8_t width)
 {
-
-
     map_t * new_map = (map_t *) calloc(1, sizeof(map_t));
 
     new_map->height = height;
@@ -37,12 +61,15 @@ map_t * create_map(WINDOW * win, uint8_t height, uint8_t width)
 
 void get_layers(map_t * parent_ptr)
 {
-    //layer addresses start at terrain
+    // layer addresses start at terrain
     parent_ptr->layers[terrain_layer] = create_terrain_layer(parent_ptr);
-    // player layer
+
+    parent_ptr->layers[enemy_layer] = create_enemy_layer(parent_ptr);
+
     parent_ptr->layers[player_layer] = create_player_layer(parent_ptr);
 
     parent_ptr->layers[cursor_layer] = create_cursor_layer(parent_ptr);
+
 }
 
 layer_t * create_layer(layer_id_t id, map_t * parent_ptr)
@@ -80,6 +107,16 @@ layer_t * create_terrain_layer(map_t * parent_ptr)
 
     return terr_layer;
 
+}
+
+layer_t * create_enemy_layer(map_t * parent_ptr)
+{
+    layer_t * en_layer = create_layer(enemy_layer, parent_ptr);
+
+    create_enemy_data( parent_ptr );
+    create_enemies( en_layer );
+
+    return en_layer;
 }
 
 layer_t * create_player_layer(map_t * parent_ptr)
@@ -229,7 +266,7 @@ void create_buildings(layer_t * layer, map_t * parent_ptr)
         buildings[i].condition = get_gaussian();
 
         if (buildings[i].condition < 0 || buildings[i].condition > 1) {
-            fprintf(stderr, "out of bounds: %d", buildings[i].condition);
+            fprintf(stderr, "out of bounds: %f", buildings[i].condition);
         }
     }
 
@@ -298,6 +335,22 @@ void create_player(layer_t * layer)
 }
 
 
+void create_enemies( layer_t * layer )
+{
+
+    for (int i = 0; i < Game_data.num_enemies; i++) {
+        create_lackey(layer, Game_data.enemies[i].y_pos, Game_data.enemies[i].x_pos);
+    }
+}
+
+void create_lackey( layer_t * layer, coord_t y, coord_t x )
+{
+    tile_t * dest_tile = &layer->tiles[y][x];
+    dest_tile->can_enter = false;
+    dest_tile->type = lackey_tile;
+}
+
+
 void create_cursor(layer_t * layer)
 {
     tile_t c_tile;
@@ -328,6 +381,16 @@ bool check_can_look(map_t * map_ptr, coord_t y, coord_t x)
         return true;
     else
         return false;
+}
+
+bool check_spawn_loc(map_t * map_ptr, layer_id_t id, coord_t y, coord_t x)
+{
+    for (int i = 0; i < id; i++) {
+        if ( !map_ptr->layers[i]->tiles[y][x].can_enter )
+            return false;
+    }
+
+    return true;
 }
 
 
@@ -426,6 +489,7 @@ void print_layer_buffered(WINDOW * win, layer_t * layer, map_t * parent_ptr)
 void print_all_layers(WINDOW * win, map_t * map_ptr)
 {
     for (int i = 0; i < NUM_LAYER_TYPES; i++) {
+        //if (i != enemy_layer )    // debug
         print_layer_buffered(win, map_ptr->layers[i], map_ptr);
     }
 }
@@ -442,7 +506,7 @@ void print_looking_desc(WINDOW * win, map_t * map_ptr)
             looking_at = current_tile.type;
     }
 
-    if (looking_at !=  empty_tile)
+    if (looking_at != empty_tile)
         mvwaddch(win, map_ptr->height+map_ptr->y_buffer+1, map_ptr->x_buffer, get_char(looking_at));
 
     // Clears color
@@ -478,6 +542,9 @@ char get_char(tile_type_t type)
     case cursor_tile:
         attron(COLOR_PAIR(cursor_pair));
         return 'X';
+    case lackey_tile:
+        attron(COLOR_PAIR(lackey_pair));
+        return 'g';
     case border_tile:
         attron(COLOR_PAIR(border_pair));
         return '#';
@@ -513,6 +580,9 @@ char * get_tile_name(tile_type_t type)
     case player_tile:
         return "Player";
 
+    case lackey_tile:
+        return "Goblin Lackey";
+
     case border_tile:
         return "Border";
 
@@ -531,6 +601,7 @@ char * get_tile_name(tile_type_t type)
     case mud_tile:
         return "Mud";
 
+
     default:
         fprintf(stderr, "type not accounted for!");
         return "You shouldn't see this.";
@@ -546,6 +617,9 @@ char * get_tile_desc(tile_type_t type)
 
     case player_tile:
         return "A very handsome and courageous goblin king.";
+
+    case lackey_tile:
+        return "An unexceptional goblin henchman.";
 
     case border_tile:
         return "The edge of this area.";
@@ -585,6 +659,7 @@ void init_tile_colors( void )
 
     init_pair(empty_pair, COLOR_WHITE, COLOR_BLACK);
     init_pair(player_pair, COLOR_WHITE, COLOR_RED);
+    init_pair(lackey_pair, COLOR_LTGREEN, COLOR_WHITE);
     init_pair(cursor_pair, COLOR_WHITE, COLOR_YELLOW);
     init_pair(wall_pair, COLOR_WHITE, COLOR_GRAY);
     init_pair(floor_pair, COLOR_TAN, COLOR_BROWN);
@@ -602,10 +677,12 @@ void move_cursor_buffered( map_t * map_ptr, coord_t y, coord_t x )
 
 int main( void )
 {
-    Game_data.player_y = 3, Game_data.player_x = 3;
+    Game_data.player_y = 1, Game_data.player_x = 1;
     Game_data.cursor_y = Game_data.player_y, Game_data.cursor_x = Game_data.player_x;
 
     Game_data.look_mode = false;
+
+    Game_data.num_enemies = 2;
 
     srand(time(NULL));
     initscr();
@@ -617,6 +694,8 @@ int main( void )
     init_tile_colors();
 
     map_t * the_map = create_map(stdscr, MAPHEIGHT, MAPWIDTH);
+
+
     print_all_layers(stdscr, the_map);
     while (true) {
         move_cursor_buffered(the_map, Game_data.cursor_y, Game_data.cursor_x );
