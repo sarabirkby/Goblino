@@ -646,27 +646,35 @@ char * get_tile_desc(tile_type_t type)
 }
 
 
+void init_color_256( short color, short r, short g, short b )
+{
+    short modifier = 1000 / 255;
+    r *= modifier, g *= modifier, b *= modifier;
+    init_color(color, r, g, b);
+}
 void init_tile_colors( void )
 {
 
     start_color();
-    init_color(COLOR_BROWN, 165, 42, 42);
-    init_color(COLOR_TAN, 218, 165, 32);
-    init_color(COLOR_LTGREEN, 124, 252,0);
-    init_color(COLOR_DKRED, 178, 34, 34);
-    init_color(COLOR_BLACK, 0, 0, 0);
-    init_color(COLOR_GRAY, 96, 96, 96);
+    if (can_change_color()) {
+        init_color_256(COLOR_BROWN, 210, 105, 30);
+        init_color_256(COLOR_DKBROWN, 100, 65, 23);
+        init_color_256(COLOR_LTBROWN, 205, 133, 63);
+    }
+    else {
+        printf("ERROR!");
+    }
 
     init_pair(empty_pair, COLOR_WHITE, COLOR_BLACK);
     init_pair(player_pair, COLOR_WHITE, COLOR_RED);
-    init_pair(lackey_pair, COLOR_LTGREEN, COLOR_WHITE);
+    init_pair(lackey_pair, COLOR_LTGREEN, COLOR_LTCYAN);
     init_pair(cursor_pair, COLOR_WHITE, COLOR_YELLOW);
-    init_pair(wall_pair, COLOR_WHITE, COLOR_GRAY);
-    init_pair(floor_pair, COLOR_TAN, COLOR_BROWN);
-    init_pair(border_pair, COLOR_RED, COLOR_DKRED);
+    init_pair(wall_pair, COLOR_LTGRAY, COLOR_GRAY);
+    init_pair(floor_pair, COLOR_DKBROWN, COLOR_LTBROWN);
+    init_pair(border_pair, COLOR_LTRED, COLOR_RED);
     init_pair(grass1_pair, COLOR_GREEN, COLOR_LTGREEN);
     init_pair(grass2_pair, COLOR_LTGREEN, COLOR_GREEN);
-    init_pair(mud_pair, COLOR_BROWN, COLOR_TAN);
+    init_pair(mud_pair, COLOR_LTBROWN, COLOR_BROWN);
 }
 
 void move_cursor_buffered( map_t * map_ptr, coord_t y, coord_t x )
@@ -704,6 +712,7 @@ int main( void )
         switch (getch()) {
         case 'q':
             endwin();
+            fprintf(stderr, "%d", COLORS);
             return 0;
 
         case KEY_DOWN:

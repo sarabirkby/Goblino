@@ -44,6 +44,9 @@
 			<Add directory="C:/codeblocks/pdcurses/wincon" />
 			<Add directory="C:/codeblocks/pdcurses" />
 		</Compiler>
+		<Linker>
+			<Add library="C:/codeblocks/pdcurses/wincon/pdcurses.a" />
+		</Linker>
 		<Unit filename="gob_util.c">
 			<Option compilerVar="CC" />
 		</Unit>

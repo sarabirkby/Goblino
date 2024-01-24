@@ -8,20 +8,36 @@
 
 #include "gob_util.h"
 
-#define PDC_RGB
-#define N_COLORS 8
+#define PDC_BGR
+
+#if 0
+#define COLOR_BLACK 0
+#define COLOR_BLUE 1
+#define COLOR_GREEN 2
+#define COLOR_CYAN 3
+#define COLOR_RED 4
+#define COLOR_MAGENTA 5
+#define COLOR_YELLOW 6
+#endif
+#define COLOR_LTGRAY 7
+#define COLOR_GRAY 8
+#define COLOR_LTBLUE 9
+#define COLOR_LTGREEN 10
+#define COLOR_LTCYAN 11
+#define COLOR_LTRED 12
+#define COLOR_LTMAGENTA 13
+#define COLOR_LTYELLOW 14
+#define COLOR_WHITE 15
+
+#define COLOR_BROWN 17
+#define COLOR_DKBROWN 18
+#define COLOR_LTBROWN 19
 
 #define MAPWIDTH 30
 #define MAPHEIGHT 20
 
 
-#define NUM_LAYER_TYPES 3
-
-#define COLOR_BROWN COLOR_WHITE+1
-#define COLOR_TAN COLOR_BROWN+1
-#define COLOR_LTGREEN COLOR_TAN+1
-#define COLOR_DKRED COLOR_LTGREEN+1
-#define COLOR_GRAY COLOR_DKRED+1
+#define NUM_LAYER_TYPES 4
 
 
 typedef enum {
