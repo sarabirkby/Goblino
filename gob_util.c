@@ -1,7 +1,7 @@
 #include "gob_util.h"
 #include <stdlib.h>
-#define DEBUG 0
-#if DEBUG
+//#define DEBUG
+#ifdef DEBUG
 #include <stdio.h>
 #include <time.h>
 #endif // DEBUG
@@ -31,50 +31,36 @@ double get_gaussian( void )
 }
 
 
-#if DEBUG // debug
+#ifdef DEBUG // debug
 
 int main( void ) {
 
      srand(time(NULL));
 
     double maximum = 0.;
-    int * rands = calloc(10, sizeof(int));
-    for (int i = 0; i < 10000; i++) {
-        for (int j = 0; j < 10; j++) {
+    int * rands = calloc(HIST_WIDTH, sizeof(int));
+    for (int i = 0; i < 100000; i++) {
+        for (int j = 0; j < HIST_WIDTH; j++) {
             double new_num = get_gaussian();
-            if (new_num < 0.1)
-                rands[0] += 1;
-            else if (new_num < 0.2)
-                rands[1] += 1;
-            else if (new_num < 0.3)
-                rands[2] += 1;
-            else if (new_num < 0.4)
-                rands[3] += 1;
-            else if (new_num < 0.5)
-                rands[4] += 1;
-            else if (new_num < 0.6)
-                rands[5] += 1;
-            else if (new_num < 0.7)
-                rands[6] += 1;
-            else if (new_num < 0.8)
-                rands[7] += 1;
-            else if (new_num < 0.9)
-                rands[8] += 1;
-            else
-                rands[9] += 1;
+            double hist_step = 1 / (double) HIST_WIDTH;
+            int hist_num = new_num / hist_step;
+            rands[hist_num] += 1;
         }
     }
     int maximum_i = 0;
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < HIST_WIDTH; i++) {
         if (rands[i] > maximum_i)
             maximum_i = rands[i];
     }
 
-    for (int i = 0; i < 10; i++) {
-        int num_histo_tiles = 100 * rands[i] / maximum_i;
+    for (int i = 0; i < HIST_WIDTH; i++) {
+        int num_hist_tiles = HIST_LEN * rands[i] / maximum_i;
 
-        printf("%d: ", i);
-        for (int j = 0; j < num_histo_tiles; j++) {
+        if (i == 0)
+            printf(" %d: ", i);
+        else
+            printf("%2.d: ", i);
+        for (int j = 0; j < num_hist_tiles; j++) {
             printf("#");
         }
         printf("\n");
