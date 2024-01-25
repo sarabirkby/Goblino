@@ -39,6 +39,8 @@
 
 #define NUM_LAYER_TYPES 4
 
+#define NUM_ENEMY_ROWS 2
+
 
 typedef enum {
     empty_tile,
@@ -145,8 +147,10 @@ typedef struct {
     coord_t cursor_x;
 
     bool look_mode;
+    bool enemy_mode;
 
     uint8_t num_enemies;
+    uint8_t selected_enemy;
 
     enemy_t * enemies;
 } game_info_t;
@@ -239,6 +243,11 @@ void print_looking_desc(WINDOW * win, map_t * map_ptr);
 void clear_looking_desc(WINDOW * win, map_t * map_ptr);
 
 
+void print_enemy_menu(WINDOW * win, map_t * map_ptr);
+
+void clear_enemy_menu(WINDOW * win, map_t * map_ptr);
+
+
 char get_char(tile_type_t type);
 
 char * get_tile_name(tile_type_t type);
@@ -246,6 +255,6 @@ char * get_tile_name(tile_type_t type);
 char * get_tile_desc(tile_type_t type);
 
 
-void move_cursor_buffered( map_t * map_ptr, coord_t y, coord_t x );
+void move_cursor_buffered( WINDOW * win, map_t * map_ptr, coord_t y, coord_t x );
 
 void init_tile_colors( void );

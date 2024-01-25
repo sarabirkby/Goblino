@@ -530,6 +530,46 @@ void clear_looking_desc(WINDOW * win, map_t * map_ptr)
         mvwdeleteln(win, map_ptr->y_buffer+map_ptr->height+1, map_ptr->x_buffer);
 }
 
+
+void print_enemy_menu(WINDOW * win, map_t * map_ptr)
+{
+    attron(COLOR_PAIR(lackey_pair));
+    attroff(COLOR_PAIR(lackey_pair));
+
+    coord_t current_y = map_ptr->y_buffer;
+    coord_t current_x = map_ptr->x_buffer+map_ptr->width+2;
+    mvwaddstr(win, current_y, current_x, "Enemies:");
+
+    current_y += 2;
+
+    move(current_y, current_x);
+    for (int i = 0; i < Game_data.num_enemies; i++) {
+        coord_t enemy_y = Game_data.enemies[i].y_pos;
+        coord_t enemy_x = Game_data.enemies[i].x_pos;
+
+        waddch(win, get_char(map_ptr->layers[enemy_layer]->tiles[enemy_y][enemy_x].type));
+        attroff(COLOR_PAIR(lackey_pair));
+        waddch(win, ' ');
+    }
+}
+
+void print_enemy_desc(WINDOW * win, map_t * map_ptr)
+{
+
+}
+
+void clear_enemy_menu(WINDOW * win, map_t * map_ptr)
+{
+    for (int i = map_ptr->y_buffer; i < map_ptr->y_buffer+1+NUM_ENEMY_ROWS; i++) {
+        move_cursor_buffered(win, map_ptr, i, map_ptr->width);
+        for (int j = map_ptr->x_buffer+map_ptr->width; j < win->_maxx; j++)
+        {
+            wdelch(win);
+        }
+    }
+}
+
+
 char get_char(tile_type_t type)
 {
     switch(type) {
@@ -677,20 +717,35 @@ void init_tile_colors( void )
     init_pair(mud_pair, COLOR_LTBROWN, COLOR_BROWN);
 }
 
-void move_cursor_buffered( map_t * map_ptr, coord_t y, coord_t x )
+void move_cursor_buffered( WINDOW * win, map_t * map_ptr,
+                           coord_t y, coord_t x )
 {
-    move(y+map_ptr->y_buffer, x+map_ptr->x_buffer);
+    wmove(win, y+map_ptr->y_buffer, x+map_ptr->x_buffer);
 }
 
+void move_to_enemy( WINDOW * win, map_t * map_ptr )
+{
+    enemy_t current_enemy = Game_data.enemies[Game_data.selected_enemy];
+    move_cursor_buffered(win, map_ptr, current_enemy.y_pos,
+                         current_enemy.x_pos);
+}
+
+void move_to_looking( WINDOW * win, map_t * map_ptr )
+{
+    move_cursor_buffered(win, map_ptr, Game_data.cursor_y,
+                         Game_data.cursor_x);
+}
 
 int main( void )
 {
     Game_data.player_y = 1, Game_data.player_x = 1;
-    Game_data.cursor_y = Game_data.player_y, Game_data.cursor_x = Game_data.player_x;
+    Game_data.cursor_y = Game_data.player_y;
+    Game_data.cursor_x = Game_data.player_x;
 
     Game_data.look_mode = false;
 
-    Game_data.num_enemies = 2;
+    Game_data.selected_enemy = 0;
+    Game_data.num_enemies = 3;
 
     srand(time(NULL));
     initscr();
@@ -706,11 +761,14 @@ int main( void )
 
     print_all_layers(stdscr, the_map);
     while (true) {
-        move_cursor_buffered(the_map, Game_data.cursor_y, Game_data.cursor_x );
+        if (Game_data.enemy_mode)
+            move_to_enemy(stdscr, the_map);
+        else if (Game_data.look_mode)
+            move_to_looking(stdscr, the_map);
         refresh();
         // If theres been a character input, some do things
         switch (getch()) {
-        case 'q':
+        case 'x':
             endwin();
             fprintf(stderr, "%d", COLORS);
             return 0;
@@ -745,9 +803,12 @@ int main( void )
                     print_looking_desc(stdscr, the_map);
                 }
             }
-            else if (check_can_move(the_map, Game_data.player_y - 1, Game_data.player_x))
+            else if (check_can_move(the_map, Game_data.player_y - 1,
+                                    Game_data.player_x))
             {
-                move_and_reprint_up(stdscr, the_map, the_map->layers[player_layer], Game_data.player_y, Game_data.player_x);
+                move_and_reprint_up(stdscr, the_map,
+                                    the_map->layers[player_layer],
+                                    Game_data.player_y, Game_data.player_x);
                 Game_data.player_y--;
             }
             break;
@@ -755,17 +816,24 @@ int main( void )
         case KEY_LEFT:
         case 'a':
             if (Game_data.look_mode) {
-                if (check_can_look(the_map, Game_data.cursor_y, Game_data.cursor_x - 1))
+                if (check_can_look(the_map, Game_data.cursor_y,
+                                   Game_data.cursor_x - 1))
                 {
-                    move_and_reprint_left( stdscr, the_map, the_map->layers[cursor_layer],
-                                           Game_data.cursor_y, Game_data.cursor_x);
+                    move_and_reprint_left( stdscr, the_map,
+                                           the_map->layers[cursor_layer],
+                                           Game_data.cursor_y,
+                                           Game_data.cursor_x);
                     Game_data.cursor_x--;
                     print_looking_desc(stdscr, the_map);
                 }
             }
-            else if (check_can_move(the_map, Game_data.player_y, Game_data.player_x - 1))
+            else if (check_can_move(the_map, Game_data.player_y,
+                                    Game_data.player_x - 1))
             {
-                move_and_reprint_left(stdscr, the_map, the_map->layers[player_layer], Game_data.player_y, Game_data.player_x);
+                move_and_reprint_left(stdscr, the_map,
+                                      the_map->layers[player_layer],
+                                      Game_data.player_y,
+                                      Game_data.player_x);
                 Game_data.player_x--;
             }
             break;
@@ -790,25 +858,75 @@ int main( void )
 
         case 'l':
         case 'k':
+            if (Game_data.enemy_mode)
+                break;
+
             if (Game_data.look_mode) {
                 Game_data.look_mode = false;
                 curs_set(FALSE);
-                destroy_and_reprint_tile( stdscr, the_map, the_map->layers[cursor_layer],
-                                          Game_data.cursor_y, Game_data.cursor_x );
+                destroy_and_reprint_tile( stdscr, the_map,
+                                          the_map->layers[cursor_layer],
+                                          Game_data.cursor_y,
+                                          Game_data.cursor_x );
 
                 clear_looking_desc(stdscr, the_map);
 
             }
             else {
                 Game_data.look_mode = true;
-                Game_data.cursor_y = Game_data.player_y, Game_data.cursor_x = Game_data.player_x;
+                Game_data.cursor_y = Game_data.player_y;
+                Game_data.cursor_x = Game_data.player_x;
                 curs_set(2);
                 create_cursor(the_map->layers[cursor_layer]);
-                move(Game_data.cursor_y+the_map->y_buffer, Game_data.cursor_x+the_map->x_buffer);
-                print_tile(stdscr, the_map, Game_data.cursor_y, Game_data.cursor_x);
+                move_cursor_buffered(stdscr, the_map, Game_data.cursor_y,
+                                     Game_data.cursor_x);
+                print_tile(stdscr, the_map,
+                           Game_data.cursor_y, Game_data.cursor_x);
 
                 print_looking_desc(stdscr, the_map);
             }
+            break;
+
+        case 'r':
+            if (Game_data.look_mode)
+                break;
+
+            if (Game_data.enemy_mode) {
+                Game_data.enemy_mode = false;
+                curs_set(FALSE);
+                clear_enemy_menu(stdscr, the_map);
+            }
+            else {
+                Game_data.enemy_mode = true;
+                curs_set(2);
+                print_enemy_menu(stdscr, the_map);
+                move_to_enemy(stdscr, the_map);
+            }
+
+            break;
+
+        case 'e':
+            if (!Game_data.enemy_mode)
+                break;
+
+            if (Game_data.selected_enemy == Game_data.num_enemies-1)
+                Game_data.selected_enemy = 0;
+            else
+                Game_data.selected_enemy++;
+
+            move_to_enemy(stdscr, the_map);
+            break;
+
+        case 'q':
+            if (!Game_data.enemy_mode)
+                break;
+
+            if (Game_data.selected_enemy == 0)
+                Game_data.selected_enemy = Game_data.num_enemies-1;
+            else
+                Game_data.selected_enemy--;
+
+            move_to_enemy(stdscr, the_map);
             break;
         }
 
