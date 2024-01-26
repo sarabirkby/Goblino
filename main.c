@@ -522,8 +522,8 @@ void print_tile(WINDOW *win, map_t * parent_ptr, coord_t y, coord_t x)
         if (character != '\0') {
             mvwaddch(win, y + parent_ptr->y_buffer, x + parent_ptr->x_buffer, character);
         }
-
     }
+    Game_data.reprinted_tile = true;
 }
 
 
@@ -542,6 +542,8 @@ void print_layer_buffered(WINDOW * win, layer_t * layer, map_t * parent_ptr)
             }
         }
     }
+
+    Game_data.reprinted_tile = true;
 }
 
 
@@ -581,12 +583,16 @@ void print_looking_desc(WINDOW * win, map_t * map_ptr)
     wmove(win, map_ptr->height+map_ptr->y_buffer+2, map_ptr->x_buffer);
     waddstr(win, desc);
 
+    Game_data.reprinted_tile = true;
+
 }
 
 void clear_looking_desc(WINDOW * win, map_t * map_ptr)
 {
     for (int i=0; i < 4; i++)
         mvwdeleteln(win, map_ptr->y_buffer+map_ptr->height+1, map_ptr->x_buffer);
+
+    Game_data.reprinted_tile = true;
 }
 
 
@@ -610,6 +616,9 @@ void print_enemy_menu(WINDOW * win, map_t * map_ptr)
         attroff(COLOR_PAIR(lackey_pair));
         waddch(win, ' ');
     }
+
+    Game_data.reprinted_tile = true;
+
 }
 
 void print_enemy_desc(WINDOW * win, map_t * map_ptr)
@@ -802,6 +811,7 @@ int main( void )
     Game_data.cursor_x = Game_data.player_x;
 
     Game_data.look_mode = false;
+    Game_data.reprinted_tile = false;
 
     Game_data.selected_enemy = 0;
     Game_data.num_enemies = 3;
@@ -820,12 +830,12 @@ int main( void )
 
     print_all_layers(stdscr, the_map);
     while (true) {
-        #if 0
-        if (Game_data.enemy_mode)
-            move_to_enemy(stdscr, the_map);
-        else if (Game_data.look_mode)
-            move_to_looking(stdscr, the_map);
-        #endif
+        if (Game_data.reprinted_tile) {
+            if (Game_data.enemy_mode)
+                move_to_enemy(stdscr, the_map);
+            else if (Game_data.look_mode)
+                move_to_looking(stdscr, the_map);
+        }
         refresh();
         // If theres been a character input, some do things
         switch (getch()) {

@@ -148,6 +148,8 @@ typedef struct {
     coord_t cursor_y;
     coord_t cursor_x;
 
+    bool reprinted_tile;
+
     bool look_mode;
     bool enemy_mode;
 
