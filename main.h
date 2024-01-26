@@ -41,6 +41,8 @@
 
 #define NUM_ENEMY_ROWS 2
 
+#define VISION_LEN 6
+
 
 typedef enum {
     empty_tile,
@@ -74,7 +76,7 @@ typedef enum {
     up_dir,
     left_dir,
     right_dir
-} move_dir_t;
+} dir_t;
 
 typedef enum {
     terrain_layer,
@@ -255,6 +257,11 @@ char * get_tile_name(tile_type_t type);
 char * get_tile_desc(tile_type_t type);
 
 
+void init_tile_colors( void );
+
+
 void move_cursor_buffered( WINDOW * win, map_t * map_ptr, coord_t y, coord_t x );
 
-void init_tile_colors( void );
+void move_to_enemy( WINDOW * win, map_t * map_ptr );
+
+void move_to_looking( WINDOW * win, map_t * map_ptr );

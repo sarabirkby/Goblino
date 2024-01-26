@@ -351,6 +351,65 @@ void create_lackey( layer_t * layer, coord_t y, coord_t x )
 }
 
 
+
+void create_vision_tiles( map_t * map_ptr, enemy_t * enemy)
+{
+    int max_vision_tiles = (VISION_LEN / 3) * 3 + (VISION_LEN / 3) * 5 + (VISION_LEN / 3 + VISION_LEN % 3) * 7;
+    tile_t ** vis_tiles = (tile_t **) calloc(max_vision_tiles, sizeof(tile_t *));
+    uint8_t current_tile_index = 0;
+    for (dir_t dir = down_dir; dir <= right_dir; dir++)
+    {
+        for (int i = 0; i < VISION_LEN; i++) {
+            uint8_t current_width;
+            if (i >= 2 * VISION_LEN / 3)
+                current_width = 7;
+            else if (i >= VISION_LEN / 3)
+                current_width = 5;
+            else
+                current_width = 3;
+
+            for (int j = -current_width/2; j < current_width/2; j++) {
+                coord_t tile_y, tile_x;
+                switch(dir) {
+                case down_dir:
+                    tile_y = enemy->y_pos + i;
+                    tile_x = enemy->x_pos + j;
+
+                    break;
+
+                case up_dir:
+                    tile_y = enemy->y_pos - i;
+                    tile_x = enemy->x_pos + j;
+
+                    break;
+
+                case left_dir:
+                    tile_y = enemy->y_pos + j;
+                    tile_x = enemy->x_pos - i;
+
+                    break;
+
+                case right_dir:
+                    tile_y = enemy->y_pos + j;
+                    tile_x = enemy->x_pos + i;
+
+                    break;
+
+                default:
+                    fprintf(stderr, "Direction out of bounds");
+                }
+
+                if (check_can_look(map_ptr, tile_y, tile_x)) {
+                    vis_tiles[current_tile_index++] = &map_ptr->layers[enemy_layer]->tiles[tile_y][tile_x];
+                    mvaddch(tile_y+map_ptr->y_buffer, tile_x+map_ptr->x_buffer, 'V');
+                }
+
+            }
+        }
+    }
+}
+
+
 void create_cursor(layer_t * layer)
 {
     tile_t c_tile;
@@ -560,7 +619,7 @@ void print_enemy_desc(WINDOW * win, map_t * map_ptr)
 
 void clear_enemy_menu(WINDOW * win, map_t * map_ptr)
 {
-    for (int i = map_ptr->y_buffer; i < map_ptr->y_buffer+1+NUM_ENEMY_ROWS; i++) {
+    for (int i = 0; i < 1+NUM_ENEMY_ROWS; i++) {
         move_cursor_buffered(win, map_ptr, i, map_ptr->width);
         for (int j = map_ptr->x_buffer+map_ptr->width; j < win->_maxx; j++)
         {
@@ -761,10 +820,12 @@ int main( void )
 
     print_all_layers(stdscr, the_map);
     while (true) {
+        #if 0
         if (Game_data.enemy_mode)
             move_to_enemy(stdscr, the_map);
         else if (Game_data.look_mode)
             move_to_looking(stdscr, the_map);
+        #endif
         refresh();
         // If theres been a character input, some do things
         switch (getch()) {
@@ -937,3 +998,6 @@ int main( void )
 
     return 0;
 }
+
+
+// TODO: ADD FUNCTION THAT PRINTS VISION TILES IN ENEMY MODE
