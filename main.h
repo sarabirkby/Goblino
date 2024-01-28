@@ -267,3 +267,15 @@ void move_cursor_buffered( WINDOW * win, map_t * map_ptr, coord_t y, coord_t x )
 void move_to_enemy( WINDOW * win, map_t * map_ptr );
 
 void move_to_looking( WINDOW * win, map_t * map_ptr );
+
+
+void game_data_init(void);
+
+
+void f_down_key( WINDOW * win_ptr, map_t * map_ptr );
+
+void f_up_key( WINDOW * win_ptr, map_t * map_ptr );
+
+void f_left_key( WINDOW * win_ptr, map_t * map_ptr );
+
+void f_right_key( WINDOW * win_ptr, map_t * map_ptr );

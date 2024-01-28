@@ -804,7 +804,7 @@ void move_to_looking( WINDOW * win, map_t * map_ptr )
                          Game_data.cursor_x);
 }
 
-int main( void )
+void game_data_init(void)
 {
     Game_data.player_y = 1, Game_data.player_x = 1;
     Game_data.cursor_y = Game_data.player_y;
@@ -815,6 +815,90 @@ int main( void )
 
     Game_data.selected_enemy = 0;
     Game_data.num_enemies = 3;
+}
+
+void f_down_key( WINDOW * win_ptr, map_t * map_ptr )
+{
+    if (Game_data.look_mode) {
+        if (check_can_look(map_ptr, Game_data.cursor_y + 1, Game_data.cursor_x))
+        {
+            move_and_reprint_down( win_ptr, map_ptr, map_ptr->layers[cursor_layer],
+                                   Game_data.cursor_y, Game_data.cursor_x);
+            Game_data.cursor_y++;
+            print_looking_desc(win_ptr, map_ptr);
+        }
+    }
+    else if (check_can_move(map_ptr, Game_data.player_y + 1, Game_data.player_x))
+    {
+        move_and_reprint_down( win_ptr, map_ptr, map_ptr->layers[player_layer],
+                               Game_data.player_y, Game_data.player_x );
+        Game_data.player_y++;
+    }
+}
+
+void f_up_key( WINDOW * win_ptr, map_t * map_ptr )
+{
+    if (Game_data.look_mode
+        && check_can_look(map_ptr, Game_data.cursor_y - 1,
+                          Game_data.cursor_x))
+    {
+        move_and_reprint_up( win_ptr, map_ptr, map_ptr->layers[cursor_layer],
+                             Game_data.cursor_y, Game_data.cursor_x);
+        Game_data.cursor_y--;
+        print_looking_desc(win_ptr, map_ptr);
+    }
+    else if (check_can_move(map_ptr, Game_data.player_y - 1, Game_data.player_x))
+    {
+        move_and_reprint_up( win_ptr, map_ptr, map_ptr->layers[player_layer],
+                               Game_data.player_y, Game_data.player_x );
+        Game_data.player_y--;
+    }
+}
+
+void f_left_key( WINDOW * win_ptr, map_t * map_ptr )
+{
+    if (Game_data.look_mode
+        && check_can_look(map_ptr, Game_data.cursor_y,
+                          Game_data.cursor_x - 1))
+    {
+        move_and_reprint_left( win_ptr, map_ptr,
+                               map_ptr->layers[cursor_layer],
+                               Game_data.cursor_y,
+                               Game_data.cursor_x);
+        Game_data.cursor_x--;
+        print_looking_desc(win_ptr, map_ptr);
+    }
+    else if (check_can_move(map_ptr, Game_data.player_y, Game_data.player_x - 1))
+    {
+        move_and_reprint_left(win_ptr, map_ptr,
+                              map_ptr->layers[player_layer],
+                              Game_data.player_y,
+                              Game_data.player_x);
+        Game_data.player_x--;
+    }
+}
+
+void f_right_key( WINDOW * win_ptr, map_t * map_ptr )
+{
+    if (Game_data.look_mode) {
+        if (check_can_look(map_ptr, Game_data.cursor_y, Game_data.cursor_x + 1))
+        {
+            move_and_reprint_right( win_ptr, map_ptr, map_ptr->layers[cursor_layer],
+                                   Game_data.cursor_y, Game_data.cursor_x);
+            Game_data.cursor_x++;
+            print_looking_desc(win_ptr, map_ptr);
+        }
+    }
+    else if (check_can_move(map_ptr, Game_data.player_y, Game_data.player_x + 1))
+    {
+        move_and_reprint_right(win_ptr, map_ptr, map_ptr->layers[player_layer], Game_data.player_y, Game_data.player_x);
+        Game_data.player_x++;
+    }
+}
+
+int main( void )
+{
+    game_data_init();
 
     srand(time(NULL));
     initscr();
@@ -846,85 +930,22 @@ int main( void )
 
         case KEY_DOWN:
         case 's':
-            if (Game_data.look_mode) {
-                if (check_can_look(the_map, Game_data.cursor_y + 1, Game_data.cursor_x))
-                {
-                    move_and_reprint_down( stdscr, the_map, the_map->layers[cursor_layer],
-                                           Game_data.cursor_y, Game_data.cursor_x);
-                    Game_data.cursor_y++;
-                    print_looking_desc(stdscr, the_map);
-                }
-            }
-            else if (check_can_move(the_map, Game_data.player_y + 1, Game_data.player_x))
-            {
-                move_and_reprint_down( stdscr, the_map, the_map->layers[player_layer],
-                                       Game_data.player_y, Game_data.player_x );
-                Game_data.player_y++;
-            }
+            f_down_key(stdscr, the_map);
             break;
 
         case KEY_UP:
         case 'w':
-            if (Game_data.look_mode) {
-                if (check_can_look(the_map, Game_data.cursor_y - 1, Game_data.cursor_x))
-                {
-                    move_and_reprint_up( stdscr, the_map, the_map->layers[cursor_layer],
-                                           Game_data.cursor_y, Game_data.cursor_x);
-                    Game_data.cursor_y--;
-                    print_looking_desc(stdscr, the_map);
-                }
-            }
-            else if (check_can_move(the_map, Game_data.player_y - 1,
-                                    Game_data.player_x))
-            {
-                move_and_reprint_up(stdscr, the_map,
-                                    the_map->layers[player_layer],
-                                    Game_data.player_y, Game_data.player_x);
-                Game_data.player_y--;
-            }
+            f_up_key(stdscr, the_map);
             break;
 
         case KEY_LEFT:
         case 'a':
-            if (Game_data.look_mode) {
-                if (check_can_look(the_map, Game_data.cursor_y,
-                                   Game_data.cursor_x - 1))
-                {
-                    move_and_reprint_left( stdscr, the_map,
-                                           the_map->layers[cursor_layer],
-                                           Game_data.cursor_y,
-                                           Game_data.cursor_x);
-                    Game_data.cursor_x--;
-                    print_looking_desc(stdscr, the_map);
-                }
-            }
-            else if (check_can_move(the_map, Game_data.player_y,
-                                    Game_data.player_x - 1))
-            {
-                move_and_reprint_left(stdscr, the_map,
-                                      the_map->layers[player_layer],
-                                      Game_data.player_y,
-                                      Game_data.player_x);
-                Game_data.player_x--;
-            }
+            f_left_key(stdscr, the_map);
             break;
 
         case KEY_RIGHT:
         case 'd':
-            if (Game_data.look_mode) {
-                if (check_can_look(the_map, Game_data.cursor_y, Game_data.cursor_x + 1))
-                {
-                    move_and_reprint_right( stdscr, the_map, the_map->layers[cursor_layer],
-                                           Game_data.cursor_y, Game_data.cursor_x);
-                    Game_data.cursor_x++;
-                    print_looking_desc(stdscr, the_map);
-                }
-            }
-            else if (check_can_move(the_map, Game_data.player_y, Game_data.player_x + 1))
-            {
-                move_and_reprint_right(stdscr, the_map, the_map->layers[player_layer], Game_data.player_y, Game_data.player_x);
-                Game_data.player_x++;
-            }
+            f_right_key(stdscr, the_map);
             break;
 
         case 'l':
